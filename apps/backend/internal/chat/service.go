@@ -3,6 +3,7 @@ package chat
 import (
 	"backend/internal/agent"
 	"context"
+	"fmt"
 )
 
 type StorageRepository interface {
@@ -33,42 +34,51 @@ func NewService(storage StorageRepository, agent AgentRepository) Service {
 
 // CreateChatMessage creates a new message in the chat with the given ID and user message.
 func (s *service) NewChatMessage(userMessage NewChatMessage, messages []agent.Message) (Message, error) {
+	chatId := userMessage.ChatId
+
 	newChatMessage := NewChatMessage{
-		ChatId: userMessage.ChatId,
+		ChatId: chatId,
 		Content: userMessage.Content,
 		Role: agent.RoleUser,
-		JsonInput: map[string]interface{}{},
+		JsonInput: userMessage.JsonInput,
 	}
 
 	// Check if chat exists and create message accordingly
-	isChatExists, err := s.storage.IsChatExists(userMessage.ChatId)
+	isChatExists, err := s.storage.IsChatExists(chatId)
 	if err != nil {
+		fmt.Printf("Error checking if chat exists: %v\n", err)
 		return Message{}, err
 	}
 
-	var newMessage Message
 	if !isChatExists {
-		newMessage, err = s.storage.CreateChat(newChatMessage)
+		_, err = s.storage.CreateChat(newChatMessage)
 	} else {
-		newMessage, err = s.storage.CreateChatMessage(newChatMessage)
+		_, err = s.storage.CreateChatMessage(newChatMessage)
 	}
 
 	if err != nil {
+		fmt.Printf("Error creating chat message: %v\n", err)
 		return Message{}, err
 	}
 
 	// Append the new message to the messages slice
 	agentMessage, err := s.agent.GenerateResponse(context.Background(), userMessage.Content, messages)
 	if err != nil {
+		fmt.Printf("Error generating agent response: %v\n", err)
 		return Message{}, err
 	}
 
-	s.storage.CreateChat(NewChatMessage{
-		ChatId:    newMessage.ChatId,
+	newMessage, err := s.storage.CreateChatMessage(NewChatMessage{
+		ChatId:    chatId,
 		Content:   agentMessage.Content,
 		Role:      agentMessage.Role,
 		JsonInput: agentMessage.JsonInput,
 	})
+
+	if err != nil {
+		fmt.Printf("Error creating chat: %v\n", err)
+		return Message{}, err
+	}
 
 	return newMessage, nil
 }

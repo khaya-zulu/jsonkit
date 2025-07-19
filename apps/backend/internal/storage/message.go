@@ -4,8 +4,8 @@ import "gorm.io/gorm"
 
 type Message struct {
 	gorm.Model
-	ChatID    string
+	ChatId    string
 	Content   string
 	Role    string
-	JsonInput map[string]interface{}
+	JsonInput map[string]interface{} `gorm:"serializer:json"`
 }

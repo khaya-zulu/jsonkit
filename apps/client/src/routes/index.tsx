@@ -1,7 +1,10 @@
+import { useState } from "react";
+
 import { ArrowUpIcon, WrenchIcon } from "@heroicons/react/16/solid";
 import { createFileRoute } from "@tanstack/react-router";
 
 import CodeMirror from "@uiw/react-codemirror";
+import Turndown from "turndown";
 
 import { EditorContent, useEditor } from "@tiptap/react";
 import { Placeholder } from "@tiptap/extensions";
@@ -14,6 +17,7 @@ import { Code } from "@tiptap/extension-code";
 import { CodeBlock } from "@tiptap/extension-code-block";
 
 import { json } from "@codemirror/lang-json";
+import { type Message, useChatMutation } from "../mutations/chat";
 
 const theme = createTheme({
   theme: "dark",
@@ -51,27 +55,41 @@ const JSONInput = () => {
   );
 };
 
-const InputBox = () => {
+const InputBox = ({ onSubmit }: { onSubmit: (value: string) => void }) => {
   const editor = useEditor({
     extensions,
   });
 
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (editor) {
+      const content = editor.getHTML();
+      const markdown = new Turndown().turndown(content);
+
+      onSubmit(markdown);
+      editor.commands.clearContent();
+    }
+  };
+
   return (
-    <div className="rounded-xl ring-1 ring-zinc-100/50 bg-white shadow-sm min-h-40 p-4 relative flex flex-col justify-between">
+    <form
+      onSubmit={handleSubmit}
+      className="rounded-xl ring-1 ring-zinc-100/50 bg-white shadow-sm min-h-40 p-4 relative flex flex-col justify-between"
+    >
       <EditorContent editor={editor} className="outline-none" />
       <div className="flex justify-between items-end mt-4">
         <div className="bg-violet-50/80 text-violet-900 px-2.5 py-1 font-semibold ring-1 ring-stone-100/40 rounded-md -translate-y-0.5">
           Claude Opus 4
         </div>
 
-        <div className="flex items-center gap-4">
+        <button type="submit" className="flex items-center gap-4">
           <WrenchIcon className="w-5 h-5 opacity-40" />
           <div className="p-2 bg-violet-500 rounded-full text-white border-4 border-violet-50">
             <ArrowUpIcon className="w-5 h-5" />
           </div>
-        </div>
+        </button>
       </div>
-    </div>
+    </form>
   );
 };
 
@@ -97,25 +115,61 @@ const Message = ({
 };
 
 function RouteComponent() {
+  const [messages, setMessages] = useState<Array<Message>>([]);
+
+  const [chatId] = useState<string>(`${Date.now()}`);
+
+  const chatMutation = useChatMutation({});
+
+  const handleSubmit = async (value: string) => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        content: value,
+        role: "user",
+        id: Date.now().toString(),
+        jsonInput: {},
+      },
+    ]);
+
+    const chatInput = await chatMutation.mutateAsync({
+      content: value,
+      jsonInput: { version: "9.99.99", data: [1, 2, 3] }, // Example JSON input
+      chatId,
+      messages,
+    });
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        content: chatInput.content,
+        role: "assistant",
+        id: chatInput.id,
+        jsonInput: {},
+      },
+    ]);
+  };
+
   return (
     <div className="flex p-4 h-screen">
       <div className="rounded-xl flex-1 bg-white ring-1 ring-zinc-200/[0.65] shadow-lg p-8 flex justify-between">
         <div className="text-violet-950">JSONkit</div>
 
         <div className="max-w-4xl flex flex-col justify-between w-full">
-          <div className="flex-1 flex flex-col gap-2 px-8">
-            <Message content="Hello, world!" role="User" />
-            <Message
-              content="Hello, User! How can I assist you today?"
-              role="AI"
-            />
-            <Message content="Can you help me with this JSON?" role="User" />
-            <Message content="Sure! Please provide the JSON data." role="AI" />
+          <div className="flex-1 flex flex-col gap-2 px-8 overflow-y-auto">
+            {messages.map((message, index) => (
+              <Message
+                key={index}
+                content={message.content}
+                role={message.role === "user" ? "User" : "AI"}
+                createdAt={new Date().toString()}
+              />
+            ))}
           </div>
           <div className="p-2 rounded-t-xl mb-2 ring-1 ring-zinc-100/50 text-zinc-600 shadow-sm mx-4 translate-y-2">
             <JSONInput />
           </div>
-          <InputBox />
+          <InputBox onSubmit={handleSubmit} />
         </div>
 
         <div></div>

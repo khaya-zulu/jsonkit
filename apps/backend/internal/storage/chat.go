@@ -6,5 +6,5 @@ type Chat struct {
 	gorm.Model
 	ID string `json:"id"`
 	Title     string `json:"title"`
-	JsonInput map[string]interface{} `json:"json_input"`
+	JsonInput map[string]interface{} `gorm:"serializer:json"`
 }

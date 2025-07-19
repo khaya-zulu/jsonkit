@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	"os"
 
 	"github.com/anthropics/anthropic-sdk-go"
 	"github.com/anthropics/anthropic-sdk-go/option"
@@ -12,7 +13,7 @@ type Agent struct {
 }
 
 func NewAgent() *Agent {
-	client := anthropic.NewClient(option.WithAPIKey(""))
+	client := anthropic.NewClient(option.WithAPIKey(os.Getenv("ANTHROPIC_API_KEY")))
 	return &Agent{ client: &client }
 }
 
@@ -21,13 +22,15 @@ func convertMessagesToConversation(userMessage string, messages []Message) []ant
 	conversation := []anthropic.MessageParam{}
 
 	for _, msg := range messages {
-		if msg.Role == RoleUser {
-			message := anthropic.NewUserMessage(anthropic.NewTextBlock(msg.Content))
-			conversation = append(conversation, message)
-		} else if msg.Role == RoleAI {
-			message := anthropic.NewAssistantMessage(anthropic.NewTextBlock(msg.Content))
-			conversation = append(conversation, message)
+		var message anthropic.MessageParam
+		switch msg.Role {
+			case RoleUser:
+				message = anthropic.NewUserMessage(anthropic.NewTextBlock(msg.Content))
+			case RoleAI:
+				message = anthropic.NewAssistantMessage(anthropic.NewTextBlock(msg.Content))
 		}
+
+		conversation = append(conversation, message)
 	}
 
 	// Add the user's message to the conversation
@@ -43,6 +46,7 @@ func (a *Agent) GenerateResponse(ctx context.Context, userMessage string, messag
 	response, err := a.client.Messages.New(ctx, anthropic.MessageNewParams{
 		Model: anthropic.ModelClaudeOpus4_0,
 		Messages: conversation,
+		MaxTokens: int64(1024),
 	})
 
 	if err != nil {

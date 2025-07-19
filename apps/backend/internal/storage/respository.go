@@ -30,7 +30,7 @@ func toChatMessage(m Message) chat.Message {
 		Content:   m.Content,
 		Role:      agent.Role(m.Role),
 		JsonInput: m.JsonInput,
-		ChatId:    m.ChatID,
+		ChatId:    m.ChatId,
 	}
 }
 
@@ -43,7 +43,7 @@ func (s *Storage) CreateChat(m chat.NewChatMessage) (chat.Message, error) {
 	}
 
 	newMessage := Message{
-		ChatID:  newChat.ID,
+		ChatId:  newChat.ID,
 		Content:  m.Content,
 		Role:   string(m.Role),
 		JsonInput: m.JsonInput,
@@ -57,7 +57,7 @@ func (s *Storage) CreateChat(m chat.NewChatMessage) (chat.Message, error) {
 
 func (s *Storage) CreateChatMessage(m chat.NewChatMessage) (chat.Message, error) {
 	newMessage := Message{
-		ChatID:  m.ChatId,
+		ChatId:  m.ChatId,
 		Content:  m.Content,
 		Role:     string(m.Role),
 		JsonInput: m.JsonInput,
