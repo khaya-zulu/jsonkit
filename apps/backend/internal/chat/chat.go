@@ -11,7 +11,7 @@ type Chat struct {
 }
 
 type Message struct {
-	ID        uint     `json:"id"`
+	ID        string     `json:"id"`
 	Content   string     `json:"content"`
 	Role      agent.Role `json:"role"`
 	JsonInput map[string]interface{} `json:"jsonInput,omitempty"`

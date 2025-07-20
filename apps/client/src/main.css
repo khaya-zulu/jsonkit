@@ -16,3 +16,13 @@ html {
 .ProseMirror:focus {
   outline: none;
 }
+
+.hide-scrollbar {
+  /* Hide scrollbar for Webkit browsers (Chrome, Safari, Edge) */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}

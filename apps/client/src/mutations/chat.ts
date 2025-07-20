@@ -11,7 +11,7 @@ export type ChatOutput = {
 export type Message = {
   id: string;
   content: string;
-  role: "user" | "assistant";
+  role: "User" | "Assistant";
   jsonInput?: Record<string, unknown>;
 };
 

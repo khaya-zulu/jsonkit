@@ -13,7 +13,6 @@ func Handler(c chat.Service) *gin.Engine {
 
 	r.Use(cors.New(
 		cors.Config{
-			// todo: restrict to just the client URL
 			AllowOrigins: []string{"*"},
 			AllowMethods: []string{"GET", "POST"},
 			AllowHeaders: []string{"*"},

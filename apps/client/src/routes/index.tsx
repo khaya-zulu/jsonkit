@@ -8,8 +8,10 @@ import Turndown from "turndown";
 
 import { EditorContent, useEditor } from "@tiptap/react";
 import { Placeholder } from "@tiptap/extensions";
+import Markdown from "react-markdown";
 
 import { createTheme } from "@uiw/codemirror-themes";
+import { formatDate } from "date-fns";
 
 import { TextStyleKit } from "@tiptap/extension-text-style";
 import { StarterKit } from "@tiptap/starter-kit";
@@ -76,7 +78,16 @@ const InputBox = ({ onSubmit }: { onSubmit: (value: string) => void }) => {
       onSubmit={handleSubmit}
       className="rounded-xl ring-1 ring-zinc-100/50 bg-white shadow-sm min-h-40 p-4 relative flex flex-col justify-between"
     >
-      <EditorContent editor={editor} className="outline-none" />
+      <EditorContent
+        editor={editor}
+        className="outline-none"
+        onKeyDown={(ev) => {
+          if (ev.key === "Enter" && !ev.shiftKey) {
+            ev.preventDefault();
+            handleSubmit(ev);
+          }
+        }}
+      />
       <div className="flex justify-between items-end mt-4">
         <div className="bg-violet-50/80 text-violet-900 px-2.5 py-1 font-semibold ring-1 ring-stone-100/40 rounded-md -translate-y-0.5">
           Claude Opus 4
@@ -93,23 +104,48 @@ const InputBox = ({ onSubmit }: { onSubmit: (value: string) => void }) => {
   );
 };
 
-const Message = ({
+const ChatMessage = ({
   content,
   role,
-  createdAt = "17:50 PM",
+  createdAt,
 }: {
   content: string;
-  role: "AI" | "User";
-  createdAt?: string;
+  role: "Assistant" | "User";
+  createdAt: Date;
 }) => {
   return (
     <div
-      className={`rounded-xl p-5 flex flex-col gap-2 ${role === "User" ? "ring-1 ring-stone-200/60" : ""}`}
+      className={`rounded-xl flex flex-col ${role === "User" ? "bg-slate-50 shadow-2xs" : ""}`}
     >
       {role === "User" ? (
-        <div className="font-semibold">{createdAt}</div>
+        <div className="font-semibold px-4 pt-2 text-slate-950">
+          {formatDate(createdAt, "hh:mm a")}
+        </div>
       ) : null}
-      <div className="text-zinc-700">{content}</div>
+
+      <div className="p-1.5">
+        <div
+          className={
+            role === "User"
+              ? "bg-white rounded-lg rounded-t-md shadow-xs p-5"
+              : ""
+          }
+        >
+          <Markdown>{content}</Markdown>
+          {role === "Assistant" ? (
+            <div className="rounded-lg mt-4 ring-1 ring-violet-950/10 overflow-hidden shadow-xs">
+              <div className="py-2 px-4 flex justify-between bg-violet-50/50 text-[#1b0746]">
+                <div>.[] | .id</div>
+                <div className="text-violet-950">Get the id of the field</div>
+              </div>
+              <div className="p-4 text-[#1b0746]">
+                fields @timestamp as date, @id as id | .fields | .id | .date |
+                .id | .fields | .id
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 };
@@ -126,7 +162,7 @@ function RouteComponent() {
       ...prev,
       {
         content: value,
-        role: "user",
+        role: "User",
         id: Date.now().toString(),
         jsonInput: {},
       },
@@ -143,7 +179,7 @@ function RouteComponent() {
       ...prev,
       {
         content: chatInput.content,
-        role: "assistant",
+        role: "Assistant",
         id: chatInput.id,
         jsonInput: {},
       },
@@ -151,18 +187,18 @@ function RouteComponent() {
   };
 
   return (
-    <div className="flex p-4 h-screen">
-      <div className="rounded-xl flex-1 bg-white ring-1 ring-zinc-200/[0.65] shadow-lg p-8 flex justify-between">
+    <div className="flex p-4 h-screen bg-white">
+      <div className="rounded-xl flex-1 bg-violet-50/10 ring-1 ring-zinc-200/[0.65] shadow-lg p-8 flex justify-between">
         <div className="text-violet-950">JSONkit</div>
 
         <div className="max-w-4xl flex flex-col justify-between w-full">
-          <div className="flex-1 flex flex-col gap-2 px-8 overflow-y-auto">
+          <div className="flex-1 flex flex-col gap-4 px-8 overflow-y-auto hide-scrollbar">
             {messages.map((message, index) => (
-              <Message
+              <ChatMessage
                 key={index}
                 content={message.content}
-                role={message.role === "user" ? "User" : "AI"}
-                createdAt={new Date().toString()}
+                role={message.role}
+                createdAt={new Date()}
               />
             ))}
           </div>

@@ -4,6 +4,7 @@ import (
 	"backend/internal/agent"
 	"backend/internal/chat"
 
+	"github.com/google/uuid"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -57,6 +58,7 @@ func (s *Storage) CreateChat(m chat.NewChatMessage) (chat.Message, error) {
 
 func (s *Storage) CreateChatMessage(m chat.NewChatMessage) (chat.Message, error) {
 	newMessage := Message{
+		ID: 	 uuid.New().String(),
 		ChatId:  m.ChatId,
 		Content:  m.Content,
 		Role:     string(m.Role),
