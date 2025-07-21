@@ -4,8 +4,9 @@ import {
   AdjustmentsHorizontalIcon,
   ArrowsPointingOutIcon,
   ArrowUpIcon,
+  Bars3Icon,
 } from "@heroicons/react/16/solid";
-import { ClipboardIcon } from "@heroicons/react/24/outline";
+import { ClipboardIcon, ClockIcon } from "@heroicons/react/24/outline";
 import { createFileRoute } from "@tanstack/react-router";
 
 import CodeMirror from "@uiw/react-codemirror";
@@ -129,8 +130,8 @@ const ChatMessage = ({
       className={`rounded-xl flex flex-col ${message.role === "User" ? "bg-stone-100 shadow-2xs" : ""}`}
     >
       {message.role === "User" ? (
-        <div className="font-semibold px-4 pt-2 text-slate-950">
-          {formatDate(createdAt, "hh:mm a")}
+        <div className="font-semibold px-4 pt-2 text-slate-950 flex justify-between">
+          User <div>• {formatDate(createdAt, "hh:mm a")}</div>
         </div>
       ) : null}
 
@@ -306,7 +307,9 @@ function RouteComponent() {
   return (
     <div className="flex p-4 h-screen bg-gradient-to-b from-stone-50/40 to-violet-50/80 gap-4">
       <div className="rounded-xl flex-1 ring-1 ring-stone-200/40 shadow-lg p-8 flex bg-white justify-between">
-        <div className="text-violet-950">JSONkit</div>
+        <div>
+          <Bars3Icon className="size-5 text-violet-950" />
+        </div>
 
         <div className="max-w-3xl flex flex-col justify-between w-full">
           <div className="flex-1 flex flex-col gap-4 px-8 overflow-y-auto hide-scrollbar">
@@ -333,15 +336,14 @@ function RouteComponent() {
       </div>
 
       <div className="rounded-xl w-[30rem] shadow-lg ring-1 ring-stone-200/40 bg-white overflow-hidden flex flex-col">
-        <div className="p-4 bg-white flex justify-end">
+        <div className="p-4 bg-white flex justify-end border-b border-stone-100">
           <ClipboardIcon className="size-5" />
         </div>
         <div className="relative flex-1 overflow-hidden px-4 pb-4">
           <div className="overflow-auto h-full hide-scrollbar overscroll-contain py-6">
             <JsonInput value={jsonInputVal} isFormatted />
           </div>
-          <div className="h-10 rounded-b-md w-full absolute bottom-0 left-0 bg-gradient-to-b from-white/50 to-violet-50" />
-          <div className="h-10 rounded-b-md w-full absolute -top-2 left-0 bg-gradient-to-b from-white to-white/50" />
+          <div className="h-10 rounded-b-md w-full absolute bottom-0 left-0 bg-gradient-to-b from-stone-50 to-white border-t border-stone-100" />
         </div>
       </div>
     </div>
