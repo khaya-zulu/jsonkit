@@ -1,6 +1,10 @@
 package storage
 
-import "gorm.io/gorm"
+import (
+	"backend/internal/agent"
+
+	"gorm.io/gorm"
+)
 
 type Message struct {
 	gorm.Model
@@ -9,4 +13,5 @@ type Message struct {
 	Content   string                 `json:"content"`
 	Role      string                 `json:"role"`
 	JsonInput map[string]interface{} `gorm:"serializer:json"`
+	ToolCalls []agent.MessageTool `gorm:"serializer:json"`
 }

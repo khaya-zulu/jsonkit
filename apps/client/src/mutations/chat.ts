@@ -2,10 +2,27 @@ import { fetchPostRequest, MutationOptionsHelper } from ".";
 
 import { useMutation } from "@tanstack/react-query";
 
+type ToolMessage = {
+  id: string;
+  input: {
+    input: Record<string, unknown> | Array<any>;
+    query: string;
+    description: string;
+  };
+  name: "process_json";
+  result: {
+    content: [{ text: string; type: "text" }];
+    is_error: boolean;
+    tool_use_id: string;
+    type: "tool_use";
+  };
+};
+
 export type ChatOutput = {
   content: string;
   role: "assistant";
   id: string;
+  toolCalls: ToolMessage[];
 };
 
 export type Message = {
@@ -13,6 +30,7 @@ export type Message = {
   content: string;
   role: "User" | "Assistant";
   jsonInput?: Record<string, unknown>;
+  toolCalls?: ToolMessage[];
 };
 
 export type ChatInput = {

@@ -16,6 +16,7 @@ type Message struct {
 	Role      agent.Role `json:"role"`
 	JsonInput map[string]interface{} `json:"jsonInput,omitempty"`
 	ChatId    string                 `json:"chatId,omitempty"`
+	ToolCalls []agent.MessageTool `json:"toolCalls,omitempty"`
 }
 
 type NewChatMessage struct {
@@ -23,6 +24,7 @@ type NewChatMessage struct {
 	Role      agent.Role `json:"role"`
 	JsonInput map[string]interface{} `json:"json_input,omitempty"`
 	ChatId    string                 `json:"chatId"`
+	ToolCalls []agent.MessageTool `json:"toolCalls,omitempty"`
 }
 
 type NewChatMessageRequest struct {

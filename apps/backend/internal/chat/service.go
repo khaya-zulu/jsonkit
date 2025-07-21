@@ -16,7 +16,7 @@ type StorageRepository interface {
 }
 
 type AgentRepository interface {
-	GenerateResponse(ctx context.Context, userMessage string, messages []agent.Message) (agent.Message, error)
+	Run(ctx context.Context, userMessage string, jsonInput interface{}, messages []agent.Message) (agent.Message, error)
 }
 
 type Service interface {
@@ -25,7 +25,7 @@ type Service interface {
 
 type service struct {
 	storage StorageRepository
-	agent AgentRepository
+	agent   AgentRepository
 }
 
 func NewService(storage StorageRepository, agent AgentRepository) Service {
@@ -35,12 +35,13 @@ func NewService(storage StorageRepository, agent AgentRepository) Service {
 // CreateChatMessage creates a new message in the chat with the given ID and user message.
 func (s *service) NewChatMessage(userMessage NewChatMessage, messages []agent.Message) (Message, error) {
 	chatId := userMessage.ChatId
+	jsonInput := userMessage.JsonInput
 
 	newChatMessage := NewChatMessage{
 		ChatId: chatId,
 		Content: userMessage.Content,
 		Role: agent.RoleUser,
-		JsonInput: userMessage.JsonInput,
+		JsonInput: jsonInput,
 	}
 
 	// Check if chat exists and create message accordingly
@@ -62,7 +63,7 @@ func (s *service) NewChatMessage(userMessage NewChatMessage, messages []agent.Me
 	}
 
 	// Append the new message to the messages slice
-	agentMessage, err := s.agent.GenerateResponse(context.Background(), userMessage.Content, messages)
+	response, err := s.agent.Run(context.Background(), userMessage.Content, jsonInput, messages)
 	if err != nil {
 		fmt.Printf("Error generating agent response: %v\n", err)
 		return Message{}, err
@@ -70,9 +71,10 @@ func (s *service) NewChatMessage(userMessage NewChatMessage, messages []agent.Me
 
 	newMessage, err := s.storage.CreateChatMessage(NewChatMessage{
 		ChatId:    chatId,
-		Content:   agentMessage.Content,
-		Role:      agentMessage.Role,
-		JsonInput: agentMessage.JsonInput,
+		Content:   response.Content,
+		Role:      response.Role,
+		JsonInput: response.JsonInput,
+		ToolCalls: response.ToolCalls,
 	})
 
 	if err != nil {

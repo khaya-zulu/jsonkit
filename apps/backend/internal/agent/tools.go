@@ -32,19 +32,25 @@ func GenerateSchema[T any]() anthropic.ToolInputSchemaParam {
 }
 
 // jqLang tool
-var PerformJqLangDefinition = ToolDefinition{
-	Name: "process_json",
+var ParseJsonDefinition = ToolDefinition{
+	Name: "parse_json",
 	Description: "Process JSON data using jqLang",
-	InputSchema: GenerateSchema[JqLangInput](),
-	Function: ParseJsonInput,
+	InputSchema: GenerateSchema[ParseJsonInput](),
+	Function: ParseJson,
 }
 
-type JqLangInput struct {
-	Input any `json:"input" jsonschema_description:"The JSON data to process"`
-	Query string          `json:"query" jsonschema_description:"The jq query to apply to the JSON data"`
+type ParseJsonInput struct {
+	Query string `json:"query" jsonschema_description:"The jq query to apply to the JSON data"`
+	Description string `json:"description" jsonschema_description:"A very short description/title of the jq query"`
 }
 
-func parseJsonInput(jsonInput any, query string) (any, error) {
+type ModifiedParseJsonInput struct {
+	Query string `json:"query"`
+	Description string `json:"description"`
+	Input any `json:"input"`
+}
+
+func parseJson(jsonInput any, query string) (any, error) {
 	parsedQuery, err := gojq.Parse(query)
 
 	if err != nil {
@@ -74,8 +80,8 @@ func parseJsonInput(jsonInput any, query string) (any, error) {
 	return result, nil
 }
 
-func ParseJsonInput (input json.RawMessage) (interface{}, error) {
-	jsonInput := JqLangInput{}
+func ParseJson (input json.RawMessage) (interface{}, error) {
+	jsonInput := ModifiedParseJsonInput{}
 
 	err := json.Unmarshal(input, &jsonInput)
 	if err != nil {
@@ -83,7 +89,7 @@ func ParseJsonInput (input json.RawMessage) (interface{}, error) {
 		return nil, err
 	}
 
-	result, err := parseJsonInput(jsonInput.Input, jsonInput.Query)
+	result, err := parseJson(jsonInput.Input, jsonInput.Query)
 
 	return result, err
 }
